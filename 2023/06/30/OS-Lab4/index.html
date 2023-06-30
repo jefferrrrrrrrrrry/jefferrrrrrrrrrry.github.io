@@ -1,0 +1,303 @@
+<!DOCTYPE html><html lang="en" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>OS-Lab4 | Jeffery&amp;Fiona</title><meta name="author" content="Jeffery"><meta name="copyright" content="Jeffery"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="Lab4ThinkingsThinking4.11234• 内核在保存现场的时候是如何避免破坏通用寄存器的？• 系统陷入内核调用后可以直接从当时的 $a0-$a3 参数寄存器中得到用户调用 msyscall留下的信息吗？• 我们是怎么做到让 sys 开头的函数“认为”我们提供了和用户调用 msyscall 时同样的参数的？• 内核处理系统调用的过程对 Trapframe 做了哪些更改？这种修改对应">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OS-Lab4">
+<meta property="og:url" content="https://jefferrrrrrrrrrry.github.io/2023/06/30/OS-Lab4/index.html">
+<meta property="og:site_name" content="Jeffery&amp;Fiona">
+<meta property="og:description" content="Lab4ThinkingsThinking4.11234• 内核在保存现场的时候是如何避免破坏通用寄存器的？• 系统陷入内核调用后可以直接从当时的 $a0-$a3 参数寄存器中得到用户调用 msyscall留下的信息吗？• 我们是怎么做到让 sys 开头的函数“认为”我们提供了和用户调用 msyscall 时同样的参数的？• 内核处理系统调用的过程对 Trapframe 做了哪些更改？这种修改对应">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://jefferrrrrrrrrrry.github.io/2.jpg">
+<meta property="article:published_time" content="2023-06-30T07:52:13.000Z">
+<meta property="article:modified_time" content="2023-06-30T07:56:48.794Z">
+<meta property="article:author" content="Jeffery">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://jefferrrrrrrrrrry.github.io/2.jpg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://jefferrrrrrrrrrry.github.io/2023/06/30/OS-Lab4/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":true,"languages":{"hits_empty":"We didn't find any results for the search: ${query}"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  },
+  relativeDate: {
+    homepage: true,
+    post: true
+  },
+  runtime: '',
+  date_suffix: {
+    just: 'Just',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'OS-Lab4',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2023-06-30 15:56:48'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          const now = new Date()
+          const hour = now.getHours()
+          const isNight = hour <= 6 || hour >= 18
+          if (t === undefined) isNight ? activateDarkMode() : activateLightMode()
+          else if (t === 'light') activateLightMode()
+          else activateDarkMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/xxx.css"><meta name="generator" content="Hexo 5.4.2"></head><body><div id="loading-box"><div class="loading-left-bg"></div><div class="loading-right-bg"></div><div class="spinner-box"><div class="configure-border-1"><div class="configure-core"></div></div><div class="configure-border-2"><div class="configure-core"></div></div><div class="loading-word">Loading...</div></div></div><script>const preloader = {
+  endLoading: () => {
+    document.body.style.overflow = 'auto';
+    document.getElementById('loading-box').classList.add("loaded")
+  },
+  initLoading: () => {
+    document.body.style.overflow = '';
+    document.getElementById('loading-box').classList.remove("loaded")
+
+  }
+}
+window.addEventListener('load',()=> { preloader.endLoading() })
+
+if (true) {
+  document.addEventListener('pjax:send', () => { preloader.initLoading() })
+  document.addEventListener('pjax:complete', () => { preloader.endLoading() })
+}</script><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/1.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">14</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">0</div></a></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 列表</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background: 2.jpg"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">Jeffery&amp;Fiona</a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> Search</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 列表</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">OS-Lab4</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2023-06-30T07:52:13.000Z" title="Created 2023-06-30 15:52:13">2023-06-30</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2023-06-30T07:56:48.794Z" title="Updated 2023-06-30 15:56:48">2023-06-30</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="OS-Lab4"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post View:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h1 id="Lab4"><a href="#Lab4" class="headerlink" title="Lab4"></a>Lab4</h1><h2 id="Thinkings"><a href="#Thinkings" class="headerlink" title="Thinkings"></a>Thinkings</h2><h3 id="Thinking4-1"><a href="#Thinking4-1" class="headerlink" title="Thinking4.1"></a>Thinking4.1</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">• 内核在保存现场的时候是如何避免破坏通用寄存器的？</span><br><span class="line">• 系统陷入内核调用后可以直接从当时的 $a0-$a3 参数寄存器中得到用户调用 msyscall留下的信息吗？</span><br><span class="line">• 我们是怎么做到让 sys 开头的函数“认为”我们提供了和用户调用 msyscall 时同样的参数的？</span><br><span class="line">• 内核处理系统调用的过程对 Trapframe 做了哪些更改？这种修改对应的用户态的变化是什么？</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>调用了SAVE_ALL来保存通用寄存器。</li>
+<li>可以，因为陷入内核时这四个寄存器的值未被破坏。</li>
+<li>将调用函数时都将前四个参数按顺序放入$a0-$a3寄存器，后两个参数按顺序压栈，维护栈指针即可。</li>
+<li>改变了Trapframe中寄存器v0的值，用于保存在用户态中调用系统调用函数的返回值；改变了EPC的值，使得程序返回用户态后能够从正确的位置继续执行。</li>
+</ul>
+<h3 id="Thinking4-2"><a href="#Thinking4-2" class="headerlink" title="Thinking4.2"></a>Thinking4.2</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">为什么 envid2env 中需要判断 e-&gt;env_id != envid的情况？如果没有这步判断会发生什么情况？</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(envid==<span class="number">0</span>)&#123;</span><br><span class="line">    *penv=curenv;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">    e=&amp;envs[ENVX(envid)];</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> (e-&gt;env_status == ENV_FREE || e-&gt;env_id != envid) &#123;</span><br><span class="line">	<span class="keyword">return</span> -E_BAD_ENV;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面这是envid2env的部分函数，可以看出envs数组的索引只取envid的后十位，但可能前22位与envs数组取出的envid不同，因此需要再次判断e-&gt;env_id != envid。</p>
+<h3 id="Thinking4-3"><a href="#Thinking4-3" class="headerlink" title="Thinking4.3"></a>Thinking4.3</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">请回顾 kern/env.c 文件中 mkenvid() 函数的实现，该函数不会返回 0，请结合系统调用和 IPC 部分的实现与envid2env() 函数的行为进行解释。 </span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"> u_int <span class="title function_">mkenvid</span><span class="params">(<span class="keyword">struct</span> Env *e)</span> &#123;</span><br><span class="line">	<span class="type">static</span> u_int i = <span class="number">0</span>;</span><br><span class="line">	<span class="keyword">return</span> ((++i) &lt;&lt; (<span class="number">1</span> + LOG2NENV)) | (e - envs);</span><br><span class="line">&#125;</span><br><span class="line"><span class="type">int</span> <span class="title function_">envid2env</span><span class="params">(u_int envid, <span class="keyword">struct</span> Env **penv, <span class="type">int</span> checkperm)</span> &#123;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">Env</span> *<span class="title">e</span>;</span></span><br><span class="line">	<span class="keyword">if</span>(envid==<span class="number">0</span>)&#123;</span><br><span class="line">		*penv=curenv;</span><br><span class="line">		<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">	&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">		e=&amp;envs[ENVX(envid)];</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> (e-&gt;env_status == ENV_FREE || e-&gt;env_id != envid) &#123;</span><br><span class="line">		<span class="keyword">return</span> -E_BAD_ENV;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span>(checkperm&amp;&amp;!(e==curenv||e-&gt;env_parent_id==curenv-&gt;env_id))&#123;</span><br><span class="line">		<span class="keyword">return</span> -E_BAD_ENV;</span><br><span class="line">	&#125;</span><br><span class="line">	*penv = e;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>mkenvid()用于申请一个新的env_id用于分配新的进程块，从逻辑上来看，0代表当前进程，因此在申请新的env_id不会返回0；从函数角度来看，((++i) &lt;&lt; (1 + LOG2NENV)) | (e - envs)想要为0，首先满足这是分配的第一个内存，因此此时((++i) &lt;&lt; (1 + LOG2NENV))不为0，所以它或上(e - envs)不为0，所以mkenvid()不会返回0。</p>
+<h3 id="Thinking4-4"><a href="#Thinking4-4" class="headerlink" title="Thinking4.4"></a>Thinking4.4</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">关于 fork 函数的两个返回值，下面说法正确的是：</span><br><span class="line">A、fork 在父进程中被调用两次，产生两个返回值</span><br><span class="line">B、fork 在两个进程中分别被调用一次，产生两个不同的返回值</span><br><span class="line">C、fork 只在父进程中被调用了一次，在两个进程中各产生一个返回值</span><br><span class="line">D、fork 只在子进程中被调用了一次，在两个进程中各产生一个返回值</span><br></pre></td></tr></table></figure>
+
+<p>选C。父进程通过调用fork函数生成新的子进程，因此fork只被调用了一次，同时子进程是在fork函数过程中通过syscall_exofork()函数产生的进程，且进程现场与父进程一致，包括pc的值，因此父子进程接下去会并发执行相同的程序，因此它们在fork()结束时会返回各自的值，因此选C。</p>
+<h3 id="Thinking4-5"><a href="#Thinking4-5" class="headerlink" title="Thinking4.5"></a>Thinking4.5</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">我们并不应该对所有的用户空间页都使用 duppage 进行映射。那么究竟哪些用户空间页应该映射，哪些不应该呢？请结合 kern/env.c 中 env_init 函数进行的页面映射、include/mmu.h 里的内存布局图以及本章的后续描述进行思考。</span><br></pre></td></tr></table></figure>
+
+<p>对页表存在映射（即相应一、二级页表项的PTE_D位为1）的页进行映射。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">map_segment(base_pgdir, <span class="number">0</span>, PADDR(pages), UPAGES, ROUND(npage * <span class="keyword">sizeof</span>(<span class="keyword">struct</span> Page), BY2PG), PTE_G);</span><br><span class="line">map_segment(base_pgdir, <span class="number">0</span>, PADDR(envs), UENVS, ROUND(NENV * <span class="keyword">sizeof</span>(<span class="keyword">struct</span> Env), BY2PG),PTE_G);</span><br></pre></td></tr></table></figure>
+
+<img src="/2023/06/30/OS-Lab4/1.png" class title="Problem">
+
+<p>这两个函数将页表和进程控制块虚拟地址与物理地址进行映射。</p>
+<h3 id="Thinking4-6"><a href="#Thinking4-6" class="headerlink" title="Thinking4.6"></a>Thinking4.6</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">在遍历地址空间存取页表项时你需要使用到 vpd 和 vpt 这两个指针，请参考 user/include/lib.h 中的相关定义，思考并回答这几个问题：</span><br><span class="line">• vpt 和 vpd 的作用是什么？怎样使用它们？</span><br><span class="line">• 从实现的角度谈一下为什么进程能够通过这种方式来存取自身的页表？</span><br><span class="line">• 它们是如何体现自映射设计的？</span><br><span class="line">• 进程能够通过这种方式来修改自己的页表项吗？</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>vpt，virtual page table二级页表; vpd，virtual page directory 一级页表（页目录）。将它们作为数组名使用。如vpt[xxx]，vbd[xxx]。</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> vpt ((volatile Pte *)UVPT)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> vpd ((volatile Pde *)(UVPT + (PDX(UVPT) &lt;&lt; PGSHIFT)))</span></span><br></pre></td></tr></table></figure>
+
+<img src="/2023/06/30/OS-Lab4/2.png" class title="Problem">
+
+<ul>
+<li>vpt和vpd是数组名，同时也是首指针，指向mmu.h中的Uesr VPT这一块中的起始地址和页目录自映射地址。因此vpt就是二级页表起始地址，而vpd就是页目录起始地址。</li>
+<li>从vpd的定义为<code>((volatile Pde *)(UVPT + (PDX(UVPT) &lt;&lt; PGSHIFT)))</code>就能看出其为页目录自映射的。</li>
+<li>不可以，页表项只能由操作系统修改。</li>
+</ul>
+<h3 id="Thinking4-7"><a href="#Thinking4-7" class="headerlink" title="Thinking4.7"></a>Thinking4.7</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">在 do_tlb_mod 函数中，你可能注意到了一个向异常处理栈复制 Trapframe运行现场的过程，请思考并回答这几个问题：</span><br><span class="line">• 这里实现了一个支持类似于“异常重入”的机制，而在什么时候会出现这种“异常重入”？</span><br><span class="line">• 内核为什么需要将异常的现场 Trapframe 复制到用户空间？</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>中断处理过程中发生各种异常（如缺页异常）导致中断，此时需要保留现场处理新遇到的异常。</li>
+<li>因为异常的处理需要用户自定义，所以在用户态进行，因此需要把TrapFrame复制给用户空间。</li>
+</ul>
+<h3 id="Thinking4-8"><a href="#Thinking4-8" class="headerlink" title="Thinking4.8"></a>Thinking4.8</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">在用户态处理页写入异常，相比于在内核态处理有什么优势？ </span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>方便用户自定义异常处理方法，更加灵活。</li>
+<li>在用户态操作，不会访问内核空间，更加安全。</li>
+</ul>
+<h3 id="Thinking4-9"><a href="#Thinking4-9" class="headerlink" title="Thinking4.9"></a>Thinking4.9</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">请思考并回答以下几个问题：</span><br><span class="line">• 为什么需要将 syscall_set_tlb_mod_entry 的调用放置在 syscall_exofork 前？</span><br><span class="line">• 如果放置在写时复制保护机制完成之后会有怎样的效果？</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>因为 syscall_exofork 会复制当前进程的Trapframe给子进程，在此之前需要把当前进程的tlb_mod_entry设置为cow_entry，这样设置一次即可，子进程会进行复制，不然调换顺序还需复制一次，十分麻烦。</li>
+<li>这更不合理，没有给子进程的每一页设置cow_entry作为处理入口，根本无法完成写时复制保护机制。</li>
+</ul>
+<h2 id="难点分析"><a href="#难点分析" class="headerlink" title="难点分析"></a>难点分析</h2><ul>
+<li><p>首先明白为什么需要系统调用，是为了保护我们的操作系统，只有在内核态才能修改比较“核心”的数据，比如页表项，输入输出操作等。当用户态需要修改这些核心数据，必须陷入内核态，由中断服务函数进行完成。内核态中处理完毕，返回用户态，并将返回值(位于$v0寄存器)传递回去，一层层回到调用处。</p>
+</li>
+<li><p>中断号，中断服务函数，用户态与内核态之间的相近“函数”我认为是本次实验的难点。sys_开头的函数，SYS_开头的函数，msyscall，syscall_开头的函数等等，十分容易混淆。</p>
+</li>
+<li><p>IPC 是微内核最重要的机制之一，目的是使得两个进程之间可以通讯，需要通过系统调用来实现。通讯最直观的一种理解就是交换数据。两个进程之间之所以没法相互交换数据，是因为<strong>各个进程的地址空间相互独立</strong>。沟通两个进程，自然需要一个<strong>权限凌驾两个进程之上的存在</strong>来进行操作，即内核态。ipc通信机制利用的正是系统调用，并且ipc_recv通过轮询是否收到信息来阻塞未收到信息的进程，通过schedule来放弃当前进程实现。</p>
+<pre><code><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">u_int env_ipc_value;    <span class="comment">// 传递的数据值</span></span><br><span class="line">u_int env_ipc_from;     <span class="comment">// 发送者的进程id</span></span><br><span class="line">u_int env_ipc_recving;  <span class="comment">// 进程是否阻塞，从而能够接收。0为不能接收，1为可以接收。</span></span><br><span class="line">u_int env_ipc_dstva;    <span class="comment">// 接收物理页面的虚拟地址</span></span><br><span class="line">u_int env_ipc_perm;     <span class="comment">// 接收页面的保护位</span></span><br></pre></td></tr></table></figure>
+</code></pre>
+</li>
+</ul>
+<h2 id="实验体会"><a href="#实验体会" class="headerlink" title="实验体会"></a>实验体会</h2><p>这次实验难度我觉得十分大，尤其是ipc通信那一块，课上的题目我没有做出来，ipc本质上是系统调用的一种情况而已，但我总是会将其想复杂，应该是我对于系统调用的流程还不是十分熟悉把。不过当我写这份实验报告的时候，我已经弄明白用户态调用函数陷入内核态，再由内核态的终端服务函数来完成服务，最后返回内核态继续执行的流程了，也感觉十分富有逻辑性，设计十分巧妙。lab4让我学到了很多有关用户进程的知识，也让我实操了系统调用，加深了对用户态和内核态的理解，感觉收获很大。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="https://jefferrrrrrrrrrry.github.io">Jeffery</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://jefferrrrrrrrrrry.github.io/2023/06/30/OS-Lab4/">https://jefferrrrrrrrrrry.github.io/2023/06/30/OS-Lab4/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"></div><div class="post_share"><div class="social-share" data-image="/2.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2023/06/30/OS-Lab5/"><img class="prev-cover" src="/2.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">Previous Post</div><div class="prev_info">OS-Lab5</div></div></a></div><div class="next-post pull-right"><a href="/2023/06/30/OS-Lab3/"><img class="next-cover" src="/1.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">Next Post</div><div class="next_info">OS-Lab3</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/1.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">Jeffery</div><div class="author-info__description">冲</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">14</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/jefferrrrrrrrrrry"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/jefferrrrrrrrrrry" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="mailto:2358931408@qq.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Catalog</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Lab4"><span class="toc-number">1.</span> <span class="toc-text">Lab4</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Thinkings"><span class="toc-number">1.1.</span> <span class="toc-text">Thinkings</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Thinking4-1"><span class="toc-number">1.1.1.</span> <span class="toc-text">Thinking4.1</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Thinking4-2"><span class="toc-number">1.1.2.</span> <span class="toc-text">Thinking4.2</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Thinking4-3"><span class="toc-number">1.1.3.</span> <span class="toc-text">Thinking4.3</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Thinking4-4"><span class="toc-number">1.1.4.</span> <span class="toc-text">Thinking4.4</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Thinking4-5"><span class="toc-number">1.1.5.</span> <span class="toc-text">Thinking4.5</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Thinking4-6"><span class="toc-number">1.1.6.</span> <span class="toc-text">Thinking4.6</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Thinking4-7"><span class="toc-number">1.1.7.</span> <span class="toc-text">Thinking4.7</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Thinking4-8"><span class="toc-number">1.1.8.</span> <span class="toc-text">Thinking4.8</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Thinking4-9"><span class="toc-number">1.1.9.</span> <span class="toc-text">Thinking4.9</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%9A%BE%E7%82%B9%E5%88%86%E6%9E%90"><span class="toc-number">1.2.</span> <span class="toc-text">难点分析</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E4%BD%93%E4%BC%9A"><span class="toc-number">1.3.</span> <span class="toc-text">实验体会</span></a></li></ol></li></ol></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2023 By Jeffery</div><div class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div><div class="footer_custom_text">Go!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Read Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Switch Between Light And Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle between single-column and double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="Setting"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table Of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back To Top"><i class="fas fa-arrow-up"></i></button></div></div><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">Search</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  Loading the Database</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="Search for Posts" type="text"/></div></div><hr/><div id="local-search-results"></div></div></div><div id="search-mask"></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.min.js"></script><script src="https://cdn.jsdelivr.net/npm/instant.page/instantpage.min.js" type="module"></script><script src="/js/search/local-search.js"></script><div class="js-pjax"></div><script src="xxxx"></script><script defer="defer" id="fluttering_ribbon" mobile="true" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-fluttering-ribbon.min.js"></script><script id="click-heart" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/click-heart.min.js" async="async" mobile="false"></script><script src="https://cdn.jsdelivr.net/npm/pjax/pjax.min.js"></script><script>let pjaxSelectors = ["head > title","#config-diff","#body-wrap","#rightside-config-hide","#rightside-config-show",".js-pjax"]
+
+var pjax = new Pjax({
+  elements: 'a:not([target="_blank"]):not([href="/music/"]):not([href="/no-pjax/"])',
+  selectors: pjaxSelectors,
+  cacheBust: false,
+  analytics: false,
+  scrollRestoration: false
+})
+
+document.addEventListener('pjax:send', function () {
+
+  // removeEventListener scroll 
+  window.tocScrollFn && window.removeEventListener('scroll', window.tocScrollFn)
+  window.scrollCollect && window.removeEventListener('scroll', scrollCollect)
+
+  document.getElementById('rightside').style.cssText = "opacity: ''; transform: ''"
+  
+  if (window.aplayers) {
+    for (let i = 0; i < window.aplayers.length; i++) {
+      if (!window.aplayers[i].options.fixed) {
+        window.aplayers[i].destroy()
+      }
+    }
+  }
+
+  typeof typed === 'object' && typed.destroy()
+
+  //reset readmode
+  const $bodyClassList = document.body.classList
+  $bodyClassList.contains('read-mode') && $bodyClassList.remove('read-mode')
+
+  typeof disqusjs === 'object' && disqusjs.destroy()
+})
+
+document.addEventListener('pjax:complete', function () {
+  window.refreshFn()
+
+  document.querySelectorAll('script[data-pjax]').forEach(item => {
+    const newScript = document.createElement('script')
+    const content = item.text || item.textContent || item.innerHTML || ""
+    Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
+    newScript.appendChild(document.createTextNode(content))
+    item.parentNode.replaceChild(newScript, item)
+  })
+
+  GLOBAL_CONFIG.islazyload && window.lazyLoadInstance.update()
+
+  typeof chatBtnFn === 'function' && chatBtnFn()
+  typeof panguInit === 'function' && panguInit()
+
+  // google analytics
+  typeof gtag === 'function' && gtag('config', '', {'page_path': window.location.pathname});
+
+  // baidu analytics
+  typeof _hmt === 'object' && _hmt.push(['_trackPageview',window.location.pathname]);
+
+  typeof loadMeting === 'function' && document.getElementsByClassName('aplayer').length && loadMeting()
+
+  // prismjs
+  typeof Prism === 'object' && Prism.highlightAll()
+})
+
+document.addEventListener('pjax:error', (e) => {
+  if (e.request.status === 404) {
+    pjax.loadUrl('/404.html')
+  }
+})</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

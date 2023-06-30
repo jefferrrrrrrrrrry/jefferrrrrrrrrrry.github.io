@@ -1,0 +1,276 @@
+<!DOCTYPE html><html lang="en" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>OS-Lab3 | Jeffery&amp;Fiona</title><meta name="author" content="Jeffery"><meta name="copyright" content="Jeffery"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="Lab3实验报告ThinkingsThinking3.11请结合MOS中的页目录自映射应用解释代码中 e-&gt;env_pgdir[PDX(UVPT)]&#x3D; PADDR(e-&gt;env_pgdir) | PTE_V 的含义。  PADDR(e-&gt;env_pgdir)是e的页目录的物理地址，PDX(UVPT)指的是索引这一个进程的页目录.的一级页号，将这个一级页号加上e的页目录地址，希望得">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OS-Lab3">
+<meta property="og:url" content="https://jefferrrrrrrrrrry.github.io/2023/06/30/OS-Lab3/index.html">
+<meta property="og:site_name" content="Jeffery&amp;Fiona">
+<meta property="og:description" content="Lab3实验报告ThinkingsThinking3.11请结合MOS中的页目录自映射应用解释代码中 e-&gt;env_pgdir[PDX(UVPT)]&#x3D; PADDR(e-&gt;env_pgdir) | PTE_V 的含义。  PADDR(e-&gt;env_pgdir)是e的页目录的物理地址，PDX(UVPT)指的是索引这一个进程的页目录.的一级页号，将这个一级页号加上e的页目录地址，希望得">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://jefferrrrrrrrrrry.github.io/1.jpg">
+<meta property="article:published_time" content="2023-06-30T07:52:05.000Z">
+<meta property="article:modified_time" content="2023-06-30T07:54:34.507Z">
+<meta property="article:author" content="Jeffery">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://jefferrrrrrrrrrry.github.io/1.jpg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://jefferrrrrrrrrrry.github.io/2023/06/30/OS-Lab3/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":true,"languages":{"hits_empty":"We didn't find any results for the search: ${query}"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  },
+  relativeDate: {
+    homepage: true,
+    post: true
+  },
+  runtime: '',
+  date_suffix: {
+    just: 'Just',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'OS-Lab3',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2023-06-30 15:54:34'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          const now = new Date()
+          const hour = now.getHours()
+          const isNight = hour <= 6 || hour >= 18
+          if (t === undefined) isNight ? activateDarkMode() : activateLightMode()
+          else if (t === 'light') activateLightMode()
+          else activateDarkMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/xxx.css"><meta name="generator" content="Hexo 5.4.2"></head><body><div id="loading-box"><div class="loading-left-bg"></div><div class="loading-right-bg"></div><div class="spinner-box"><div class="configure-border-1"><div class="configure-core"></div></div><div class="configure-border-2"><div class="configure-core"></div></div><div class="loading-word">Loading...</div></div></div><script>const preloader = {
+  endLoading: () => {
+    document.body.style.overflow = 'auto';
+    document.getElementById('loading-box').classList.add("loaded")
+  },
+  initLoading: () => {
+    document.body.style.overflow = '';
+    document.getElementById('loading-box').classList.remove("loaded")
+
+  }
+}
+window.addEventListener('load',()=> { preloader.endLoading() })
+
+if (true) {
+  document.addEventListener('pjax:send', () => { preloader.initLoading() })
+  document.addEventListener('pjax:complete', () => { preloader.endLoading() })
+}</script><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/1.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">14</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">0</div></a></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 列表</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background: 1.jpg"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">Jeffery&amp;Fiona</a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> Search</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 列表</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">OS-Lab3</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2023-06-30T07:52:05.000Z" title="Created 2023-06-30 15:52:05">2023-06-30</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2023-06-30T07:54:34.507Z" title="Updated 2023-06-30 15:54:34">2023-06-30</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="OS-Lab3"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post View:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h1 id="Lab3实验报告"><a href="#Lab3实验报告" class="headerlink" title="Lab3实验报告"></a>Lab3实验报告</h1><h2 id="Thinkings"><a href="#Thinkings" class="headerlink" title="Thinkings"></a>Thinkings</h2><h3 id="Thinking3-1"><a href="#Thinking3-1" class="headerlink" title="Thinking3.1"></a>Thinking3.1</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">请结合MOS中的页目录自映射应用解释代码中 e-&gt;env_pgdir[PDX(UVPT)]= PADDR(e-&gt;env_pgdir) | PTE_V 的含义。</span><br></pre></td></tr></table></figure>
+
+<p>PADDR(e-&gt;env_pgdir)是e的页目录的物理地址，PDX(UVPT)指的是索引这一个进程的页目录.的一级页号，将这个一级页号加上e的页目录地址，希望得到的页表项是能索引到e的页目录。将这个页表项写为PADDR(e-&gt;env_pgdir) | PTE_V，就能建立页目录自映射。</p>
+<h3 id="Thinking3-2"><a href="#Thinking3-2" class="headerlink" title="Thinking3.2"></a>Thinking3.2</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">elf_load_seg 以函数指针的形式，接受外部自定义的回调函数 map_page。请你找到与之相关的 data 这一参数在此处的来源，并思考它的作用。没有这个参数可不可以？为什么？</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">size_t</span> ph_off = (ehdr)-&gt;e_phoff;</span><br><span class="line"><span class="keyword">for</span> (<span class="type">int</span> _ph_idx = <span class="number">0</span>; _ph_idx &lt; (ehdr)-&gt;e_phnum; ++_ph_idx, (ph_off) += (ehdr)-&gt;e_phentsize) &#123;</span><br><span class="line">    Elf32_Phdr *ph = (Elf32_Phdr *)(binary + ph_off);</span><br><span class="line">    <span class="keyword">if</span> (ph-&gt;p_type == PT_LOAD) &#123;</span><br><span class="line">        panic_on(elf_load_seg(ph, binary + ph-&gt;p_offset,load_icode_mapper, e));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>map_page在这里是load_icode_mapper，data来源是(ehdr)-&gt;e_phoff，每次循环加ehdr-&gt; e_phentsize。不可以没有data，因为elf_load_seg 函数会从 ph 中获取 va（该段需要被加载到的虚地址）、sgsize（该段在内存中的大小）、bin_size（该段在文件中的大小）和 perm（该段被加载时的页面权限）。</p>
+<h3 id="Thinking3-3"><a href="#Thinking3-3" class="headerlink" title="Thinking3.3"></a>Thinking3.3</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">结合 elf_load_seg 的参数和实现，考虑该函数需要处理哪些页面加载的情况。</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">elf_load_seg</span><span class="params">(Elf32_Phdr *ph, <span class="type">const</span> <span class="type">void</span> *bin, <span class="type">elf_mapper_t</span> map_page, <span class="type">void</span> *data)</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>加载该段的所有数据（bin）中的所有内容到内存（va）。 </li>
+<li>如果该段在文件中的内容的大小达不到为填入这段内容新分配的页面大小，即分配了新的页面但没能填满（如 .bss 区域），那么余下的部分用 0 来填充。</li>
+</ul>
+<h3 id="Thinking3-4"><a href="#Thinking3-4" class="headerlink" title="Thinking3.4"></a>Thinking3.4</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">你认为这里的 env_tf.cp0_epc 存储的是物理地址还是虚拟地址?</span><br></pre></td></tr></table></figure>
+
+<p>虚拟地址，因为ehdr-&gt;entry储存的是elf文件入口虚拟地址。</p>
+<h3 id="Thinking3-5"><a href="#Thinking3-5" class="headerlink" title="Thinking3.5"></a>Thinking3.5</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">试找出 0、1、2、3 号异常处理函数的具体实现位置。</span><br></pre></td></tr></table></figure>
+
+<p>在genex.S中</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">.macro BUILD_HANDLER exception handler</span><br><span class="line"><span class="title function_">NESTED</span><span class="params">(handle_\exception, TF_SIZE, zero)</span></span><br><span class="line">	move    a0, sp</span><br><span class="line">	jal     \handler</span><br><span class="line">	j       ret_from_exception</span><br><span class="line"><span class="title function_">END</span><span class="params">(handle_\exception)</span></span><br><span class="line">.endm</span><br><span class="line"><span class="comment">//0号异常处理</span></span><br><span class="line"><span class="title function_">NESTED</span><span class="params">(handle_int, TF_SIZE, zero)</span></span><br><span class="line">	mfc0    t0, CP0_CAUSE</span><br><span class="line">	mfc0    t2, CP0_STATUS</span><br><span class="line">	and     t0, t2</span><br><span class="line">	andi    t1, t0, STATUS_IM4</span><br><span class="line">	bnez    t1, timer_irq</span><br><span class="line">	<span class="comment">// <span class="doctag">TODO:</span> handle other irqs</span></span><br><span class="line">timer_irq:</span><br><span class="line">	sw      zero, <span class="params">(KSEG1 | DEV_RTC_ADDRESS | DEV_RTC_INTERRUPT_ACK)</span></span><br><span class="line">	li      a0, 0</span><br><span class="line">	j       schedule</span><br><span class="line"><span class="title function_">END</span><span class="params">(handle_int)</span></span><br><span class="line">BUILD_HANDLER tlb do_tlb_refill<span class="comment">//2，3号异常处理</span></span><br><span class="line"><span class="meta">#<span class="keyword">if</span> !defined(LAB) || LAB &gt;= 4</span></span><br><span class="line">BUILD_HANDLER mod do_tlb_mod<span class="comment">//1号异常处理</span></span><br><span class="line">BUILD_HANDLER sys do_syscall<span class="comment">//8号异常处理</span></span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line">BUILD_HANDLER reserved do_reserved<span class="comment">//其余异常处理</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="Thinking3-6"><a href="#Thinking3-6" class="headerlink" title="Thinking3.6"></a>Thinking3.6</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">阅读 init.c、kclock.S、env_asm.S 和 genex.S 这几个文件，并尝试说出enable_irq 和 timer_irq 中每行汇编代码的作用。 </span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>enable_irq</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">LEAF(enable<span class="emphasis">_irq)</span></span><br><span class="line"><span class="emphasis">	li      t0, (STATUS_</span>CU0 | STATUS<span class="emphasis">_IM4 | STATUS_</span>IEc)</span><br><span class="line"><span class="code">	//向t0存入允许的中断</span></span><br><span class="line"><span class="code">	mtc0    t0, CP0_STATUS</span></span><br><span class="line"><span class="code">	//向CP0_STATUS寄存器写入允许的中断设置</span></span><br><span class="line"><span class="code">	jr      ra</span></span><br><span class="line"><span class="code">	//返回</span></span><br><span class="line"><span class="code">END(enable_irq)</span></span><br></pre></td></tr></table></figure></li>
+<li><p>timer_irq</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">timer<span class="emphasis">_irq:</span></span><br><span class="line"><span class="emphasis">	sw      zero, (KSEG1 | DEV_</span>RTC<span class="emphasis">_ADDRESS | DEV_</span>RTC<span class="emphasis">_INTERRUPT_</span>ACK)</span><br><span class="line"><span class="code">	//kseg1处向时钟外设的中断位置写入0，表示响应中断</span></span><br><span class="line"><span class="code">	li      a0, 0</span></span><br><span class="line"><span class="code">	//将0作为函数参数</span></span><br><span class="line"><span class="code">	j       schedule</span></span><br><span class="line"><span class="code">	//跳转到进程切换</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<h3 id="Thinking3-7"><a href="#Thinking3-7" class="headerlink" title="Thinking3.7"></a>Thinking3.7</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">阅读相关代码，思考操作系统是怎么根据时钟中断切换进程的。</span><br></pre></td></tr></table></figure>
+
+<p>thinking3.6的timer_irq在响应时间中断后会将参数为0（yield==0）并跳转到schedule函数。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">schedule</span><span class="params">(<span class="type">int</span> yield)</span> &#123;</span><br><span class="line">	<span class="type">static</span> <span class="type">int</span> count = <span class="number">0</span>; <span class="comment">// remaining time slices of current env</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">Env</span> *<span class="title">e</span> =</span> curenv;</span><br><span class="line">	<span class="keyword">if</span>(yield==<span class="number">1</span>||count==<span class="number">0</span>||e==<span class="literal">NULL</span>||e-&gt;env_status!=ENV_RUNNABLE)&#123;</span><br><span class="line">		<span class="keyword">if</span>(curenv!=<span class="literal">NULL</span>&amp;&amp;e-&gt;env_status==ENV_RUNNABLE)&#123;</span><br><span class="line">			TAILQ_INSERT_TAIL(&amp;env_sched_list,e,env_sched_link);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span>(TAILQ_EMPTY(&amp;env_sched_list))&#123;</span><br><span class="line">			panic(<span class="string">&quot;error&quot;</span>);</span><br><span class="line">		&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">			e=TAILQ_FIRST(&amp;env_sched_list);</span><br><span class="line">			TAILQ_REMOVE(&amp;env_sched_list,e,env_sched_link);</span><br><span class="line">			count=e-&gt;env_pri;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	count--;</span><br><span class="line">	env_run(e);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在schedule函数中因为yield不为1，且其余条件都满足进程切换，会将当前进程插入到进程链表的尾部，然后取出进程链表env_sched_list第一个进程作为当前进程，并且env_run。这就做到了每个时间片结束对进程进行切换。</p>
+<h2 id="实验难点"><a href="#实验难点" class="headerlink" title="实验难点"></a>实验难点</h2><ul>
+<li>前半部分的进程切换虽然复杂但是理解起来不困难，十分自然，但是加载二进制镜像理解起来十分不容易。load_icode中调用了elf_load_seg函数，而 elf_load_seg调用了load_icode_mapper，load_icode_mapper最终调用了memcpy完成内存复制。</li>
+<li>每个部分理解起来并不困难，当将串联就不是很清晰了。</li>
+</ul>
+<img src="/2023/06/30/OS-Lab3/1.png" class title="This is an example image">
+
+<h2 id="实验体会"><a href="#实验体会" class="headerlink" title="实验体会"></a>实验体会</h2><p>有了lab2的数据结构记忆唤醒，理解lab3的空闲env和调度中的env队列就变得相当容易了。这个lab与上学期计组的p7结合得十分紧密，当时那几个协处理寄存器又一次理解了它们的作用，有记录中断允许位的，有记录异常号的，方便直接获取已经储存在相应异常号的下标的异常处理函数入口地址的数组。模拟中断的方式也是相同，往指定的位置写入值，相应异常便是在那个指定的位置恢复特定的值。同时这次试验需要自己的debug来定位出错的点，可以选择使用<code>gexuml</code>的调试方法，但是我觉得还不够直观和精确，于是选择了在可能出错的语句前后printk值来检查当前程序在哪开始出问题了，精准定位。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="https://jefferrrrrrrrrrry.github.io">Jeffery</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://jefferrrrrrrrrrry.github.io/2023/06/30/OS-Lab3/">https://jefferrrrrrrrrrry.github.io/2023/06/30/OS-Lab3/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"></div><div class="post_share"><div class="social-share" data-image="/1.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2023/06/30/OS-Lab4/"><img class="prev-cover" src="/2.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">Previous Post</div><div class="prev_info">OS-Lab4</div></div></a></div><div class="next-post pull-right"><a href="/2023/06/30/BUAA-OO-%E7%AC%AC%E5%9B%9B%E5%8D%95%E5%85%83UML%E5%9B%BE%E4%B9%A6%E7%AE%A1%E7%90%86%E7%B3%BB%E7%BB%9F/"><img class="next-cover" src="/2.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">Next Post</div><div class="next_info">BUAA-OO-第四单元UML图书管理系统</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/1.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">Jeffery</div><div class="author-info__description">冲</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">14</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/jefferrrrrrrrrrry"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/jefferrrrrrrrrrry" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="mailto:2358931408@qq.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Catalog</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Lab3%E5%AE%9E%E9%AA%8C%E6%8A%A5%E5%91%8A"><span class="toc-number">1.</span> <span class="toc-text">Lab3实验报告</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Thinkings"><span class="toc-number">1.1.</span> <span class="toc-text">Thinkings</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Thinking3-1"><span class="toc-number">1.1.1.</span> <span class="toc-text">Thinking3.1</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Thinking3-2"><span class="toc-number">1.1.2.</span> <span class="toc-text">Thinking3.2</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Thinking3-3"><span class="toc-number">1.1.3.</span> <span class="toc-text">Thinking3.3</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Thinking3-4"><span class="toc-number">1.1.4.</span> <span class="toc-text">Thinking3.4</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Thinking3-5"><span class="toc-number">1.1.5.</span> <span class="toc-text">Thinking3.5</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Thinking3-6"><span class="toc-number">1.1.6.</span> <span class="toc-text">Thinking3.6</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Thinking3-7"><span class="toc-number">1.1.7.</span> <span class="toc-text">Thinking3.7</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E9%9A%BE%E7%82%B9"><span class="toc-number">1.2.</span> <span class="toc-text">实验难点</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E4%BD%93%E4%BC%9A"><span class="toc-number">1.3.</span> <span class="toc-text">实验体会</span></a></li></ol></li></ol></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2023 By Jeffery</div><div class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div><div class="footer_custom_text">Go!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Read Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Switch Between Light And Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle between single-column and double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="Setting"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table Of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back To Top"><i class="fas fa-arrow-up"></i></button></div></div><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">Search</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  Loading the Database</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="Search for Posts" type="text"/></div></div><hr/><div id="local-search-results"></div></div></div><div id="search-mask"></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.min.js"></script><script src="https://cdn.jsdelivr.net/npm/instant.page/instantpage.min.js" type="module"></script><script src="/js/search/local-search.js"></script><div class="js-pjax"></div><script src="xxxx"></script><script defer="defer" id="fluttering_ribbon" mobile="true" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-fluttering-ribbon.min.js"></script><script id="click-heart" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/click-heart.min.js" async="async" mobile="false"></script><script src="https://cdn.jsdelivr.net/npm/pjax/pjax.min.js"></script><script>let pjaxSelectors = ["head > title","#config-diff","#body-wrap","#rightside-config-hide","#rightside-config-show",".js-pjax"]
+
+var pjax = new Pjax({
+  elements: 'a:not([target="_blank"]):not([href="/music/"]):not([href="/no-pjax/"])',
+  selectors: pjaxSelectors,
+  cacheBust: false,
+  analytics: false,
+  scrollRestoration: false
+})
+
+document.addEventListener('pjax:send', function () {
+
+  // removeEventListener scroll 
+  window.tocScrollFn && window.removeEventListener('scroll', window.tocScrollFn)
+  window.scrollCollect && window.removeEventListener('scroll', scrollCollect)
+
+  document.getElementById('rightside').style.cssText = "opacity: ''; transform: ''"
+  
+  if (window.aplayers) {
+    for (let i = 0; i < window.aplayers.length; i++) {
+      if (!window.aplayers[i].options.fixed) {
+        window.aplayers[i].destroy()
+      }
+    }
+  }
+
+  typeof typed === 'object' && typed.destroy()
+
+  //reset readmode
+  const $bodyClassList = document.body.classList
+  $bodyClassList.contains('read-mode') && $bodyClassList.remove('read-mode')
+
+  typeof disqusjs === 'object' && disqusjs.destroy()
+})
+
+document.addEventListener('pjax:complete', function () {
+  window.refreshFn()
+
+  document.querySelectorAll('script[data-pjax]').forEach(item => {
+    const newScript = document.createElement('script')
+    const content = item.text || item.textContent || item.innerHTML || ""
+    Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
+    newScript.appendChild(document.createTextNode(content))
+    item.parentNode.replaceChild(newScript, item)
+  })
+
+  GLOBAL_CONFIG.islazyload && window.lazyLoadInstance.update()
+
+  typeof chatBtnFn === 'function' && chatBtnFn()
+  typeof panguInit === 'function' && panguInit()
+
+  // google analytics
+  typeof gtag === 'function' && gtag('config', '', {'page_path': window.location.pathname});
+
+  // baidu analytics
+  typeof _hmt === 'object' && _hmt.push(['_trackPageview',window.location.pathname]);
+
+  typeof loadMeting === 'function' && document.getElementsByClassName('aplayer').length && loadMeting()
+
+  // prismjs
+  typeof Prism === 'object' && Prism.highlightAll()
+})
+
+document.addEventListener('pjax:error', (e) => {
+  if (e.request.status === 404) {
+    pjax.loadUrl('/404.html')
+  }
+})</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
